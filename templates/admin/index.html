@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}管理后台 - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="list-group shadow-sm" id="adminNav">
+                <a class="list-group-item list-group-item-action active" data-page="stats" href="#">
+                    <i class="fa-solid fa-chart-pie me-2"></i>系统统计
+                </a>
+                <a class="list-group-item list-group-item-action" data-page="positions" href="#">
+                    <i class="fa-solid fa-briefcase me-2"></i>岗位管理
+                </a>
+                <a class="list-group-item list-group-item-action" data-page="rules" href="#">
+                    <i class="fa-solid fa-gavel me-2"></i>规则管理
+                </a>
+            </div>
+        </div>
+        <div class="col-md-10" id="adminContent">
+            <div class="text-center py-5 text-muted">加载中...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const token = localStorage.getItem('access_token');
+const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+// 检查管理员权限
+async function checkAdmin() {
+    try {
+        const res = await fetch('/api/v1/auth/me', { headers });
+        if (!res.ok || res.json().role !== 'admin') {
+            alert('需要管理员权限'); window.location.href = '/'; return;
+        }
+        loadPage('stats');
+    } catch(e) { window.location.href = '/login'; }
+}
+
+// 导航切换
+document.querySelectorAll('#adminNav a').forEach(a => {
+    a.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('#adminNav a').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+        loadPage(a.dataset.page);
+    });
+});
+
+async function loadPage(page) {
+    const ct = document.getElementById('adminContent');
+    if (page === 'stats') await loadStats(ct);
+    else if (page === 'positions') await loadPositions(ct);
+    else if (page === 'rules') await loadRules(ct);
+}
+
+async function loadStats(ct) {
+    try {
+        const res = await fetch('/api/v1/admin/stats', { headers });
+        const stats = await res.json();
+        ct.innerHTML = `
+            <h4 class="mb-3">系统统计</h4>
+            <div class="row g-3">
+                <div class="col-md-3"><div class="card border-0 shadow-sm text-center"><div class="card-body">
+                    <div class="display-5 fw-bold text-primary">${stats.users}</div><div>用户总数</div></div></div></div>
+                <div class="col-md-3"><div class="card border-0 shadow-sm text-center"><div class="card-body">
+                    <div class="display-5 fw-bold text-success">${stats.resumes.total}</div><div>简历总数</div></div></div></div>
+                <div class="col-md-3"><div class="card border-0 shadow-sm text-center"><div class="card-body">
+                    <div class="display-5 fw-bold text-info">${stats.avg_score}</div><div>平均分</div></div></div></div>
+                <div class="col-md-3"><div class="card border-0 shadow-sm text-center"><div class="card-body">
+                    <div class="display-5 fw-bold text-warning">${stats.active_rules}</div><div>活跃规则</div></div></div></div>
+            </div>
+            <hr>
+            <table class="table table-sm"><tr><td>完成</td><td>${stats.resumes.completed}</td></tr>
+            <tr><td>失败</td><td>${stats.resumes.failed}</td></tr><tr><td>岗位数</td><td>${stats.positions}</td></tr></table>`;
+    } catch(e) { ct.innerHTML = '<div class="alert alert-danger">加载失败: ' + e.message + '</div>'; }
+}
+
+async function loadPositions(ct) {
+    try {
+        const [posRes, catRes] = await Promise.all([
+            fetch('/api/v1/positions'), fetch('/api/v1/positions/categories')
+        ]);
+        const positions = await posRes.json();
+        const categories = await catRes.json();
+        ct.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>岗位管理 (${positions.length}个)</h4>
+                <button class="btn btn-primary btn-sm" onclick="alert('使用API新增: POST /api/v1/admin/positions')">
+                    <i class="fa-solid fa-plus"></i> 新增
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr><th>ID</th><th>名称</th><th>类别</th><th>学历要求</th><th>经验</th><th>操作</th></tr>
+                    </thead>
+                    <tbody>${positions.map(p => `
+                        <tr>
+                            <td>${p.id}</td><td><strong>${p.name}</strong></td>
+                            <td>${p.category_name || '-'}</td>
+                            <td>${p.education_required || '-'}</td>
+                            <td>${p.experience_years !== null ? p.experience_years + '年' : '-'}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="deletePosition(${p.id})">删除</button>
+                            </td>
+                        </tr>`).join('')}</tbody></table></div>`;
+    } catch(e) { ct.innerHTML = '<div class="alert alert-danger">加载失败</div>'; }
+}
+
+async function deletePosition(id) {
+    if (!confirm('确认删除岗位#' + id + '？')) return;
+    await fetch('/api/v1/admin/positions/' + id, { method: 'DELETE', headers });
+    alert('已删除'); loadPage('positions');
+}
+
+async function loadRules(ct) {
+    try {
+        const res = await fetch('/api/v1/admin/rules', { headers });
+        const rules = await res.json();
+        ct.innerHTML = `
+            <h4 class="mb-3">缺陷规则管理 (${rules.length}条)</h4>
+            <div class="table-responsive"><table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr><th>ID</th><th>规则</th><th>类别</th><th>严重度</th><th>状态</th><th>操作</th></tr>
+                </thead>
+                <tbody>${rules.map(r => `
+                    <tr>
+                        <td>${r.rule_id}</td><td><strong>${r.name}</strong></td>
+                        <td>${r.category}</td>
+                        <td><span class="badge bg-${r.severity==='HIGH'?'danger':r.severity==='MEDIUM'?'warning':'info'}">${r.severity}</span></td>
+                        <td>${r.is_active ? '<span class="text-success">启用</span>' : '<span class="text-muted">禁用</span>'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-${r.is_active?'secondary':'success'}"
+                                onclick="toggleRule(${r.id}, ${!r.is_active})">
+                                ${r.is_active ? '禁用' : '启用'}
+                            </button>
+                        </td>
+                    </tr>`).join('')}</tbody></table></div>`;
+    } catch(e) { ct.innerHTML = '<div class="alert alert-danger">加载失败</div>'; }
+}
+
+async function toggleRule(id, active) {
+    await fetch('/api/v1/admin/rules/' + id, {
+        method: 'PUT', headers,
+        body: JSON.stringify({ is_active: active })
+    });
+    loadPage('rules');
+}
+
+checkAdmin();
+</script>
+{% endblock %}

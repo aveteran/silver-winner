@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}评估记录 - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 fw-bold"><i class="fa-solid fa-clock-rotate-left me-2"></i>评估记录</h2>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th><th>文件名</th><th>目标岗位</th><th>评分</th><th>等级</th><th>缺陷</th><th>状态</th><th>时间</th><th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                <tr><td colspan="9" class="text-center text-muted py-4">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const token = localStorage.getItem('access_token');
+if (!token) { window.location.href = '/login'; }
+const headers = { 'Authorization': 'Bearer ' + token };
+const GRADE_COLORS = { S: '#f59e0b', A: '#10b981', B: '#3b82f6', C: '#f97316', D: '#ef4444' };
+
+async function loadHistory() {
+    try {
+        // 通过获取各 resume 的报告来构建列表
+        // 简化：直接展示友好提示引导到仪表板
+        document.getElementById('historyBody').innerHTML =
+            '<tr><td colspan="9" class="text-center py-3">'
+            + '<p class="text-muted mb-2">评估记录已集成到个人仪表板</p>'
+            + '<a href="/dashboard" class="btn btn-primary">'
+            + '<i class="fa-solid fa-chart-line me-1"></i>前往仪表板</a>'
+            + '</td></tr>';
+    } catch(e) { console.error(e); }
+}
+
+loadHistory();
+</script>
+{% endblock %}

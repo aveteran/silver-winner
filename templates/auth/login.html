@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}登录 - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h3 class="text-center mb-4 fw-bold">用户登录</h3>
+                    <div id="alertBox" class="alert d-none"></div>
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" name="email" class="form-control" placeholder="请输入邮箱" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">密码</label>
+                            <input type="password" name="password" class="form-control" placeholder="请输入密码" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2">登 录</button>
+                    </form>
+                    <p class="text-center mt-3 mb-0">
+                        还没有账号？<a href="/register">立即注册</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const alertBox = document.getElementById('alertBox');
+
+    try {
+        const res = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                email: form.email.value,
+                password: form.password.value
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
+            window.location.href = '/dashboard';
+        } else {
+            alertBox.className = 'alert alert-danger';
+            alertBox.textContent = data.detail || '登录失败';
+            alertBox.classList.remove('d-none');
+        }
+    } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = '网络错误，请重试';
+        alertBox.classList.remove('d-none');
+    }
+});
+</script>
+{% endblock %}

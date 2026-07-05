@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}岗位库 - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 fw-bold"><i class="fa-solid fa-briefcase me-2"></i>岗位库</h2>
+
+    <!-- 搜索和筛选 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" id="searchInput" class="form-control" placeholder="搜索岗位名称...">
+                </div>
+                <div class="col-md-3">
+                    <select id="categoryFilter" class="form-select">
+                        <option value="">全部类别</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 类别Tab + 岗位列表 -->
+    <div id="positionTabs" class="mb-3">
+        <ul class="nav nav-pills" id="categoryTabs"></ul>
+    </div>
+
+    <div class="row g-3" id="positionsGrid">
+        <div class="col-12 text-center py-5 text-muted">加载中...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allPositions = [];
+let categories = [];
+
+async function loadLibrary() {
+    try {
+        // 加载类别
+        const catRes = await fetch('/api/v1/positions/categories');
+        categories = await catRes.json();
+
+        // 渲染Tab
+        const tabs = document.getElementById('categoryTabs');
+        tabs.innerHTML = '<li class="nav-item"><a class="nav-link active" href="#" data-cat="">全部</a></li>';
+        categories.forEach((c, i) => {
+            tabs.innerHTML += `<li class="nav-item"><a class="nav-link" href="#" data-cat="${c.id}">${c.name}</a></li>`;
+        });
+
+        // 渲染筛选下拉
+        const catFilter = document.getElementById('categoryFilter');
+        categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            catFilter.appendChild(opt);
+        });
+
+        // 加载所有岗位
+        const posRes = await fetch('/api/v1/positions');
+        allPositions = await posRes.json();
+        renderPositions(allPositions);
+
+        // Tab点击事件
+        tabs.querySelectorAll('a').forEach(a => {
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabs.querySelectorAll('a').forEach(t => t.classList.remove('active'));
+                a.classList.add('active');
+                const catId = a.dataset.cat;
+                document.getElementById('categoryFilter').value = catId;
+                filterPositions();
+            });
+        });
+
+        // 搜索/筛选事件
+        document.getElementById('searchInput').addEventListener('input', filterPositions);
+        document.getElementById('categoryFilter').addEventListener('change', filterPositions);
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function filterPositions() {
+    const keyword = document.getElementById('searchInput').value.toLowerCase();
+    const catId = document.getElementById('categoryFilter').value;
+
+    let filtered = allPositions;
+    if (catId) filtered = filtered.filter(p => p.category_name && categories.find(c => c.id == catId && c.name === p.category_name));
+    if (keyword) filtered = filtered.filter(p => p.name.toLowerCase().includes(keyword));
+
+    renderPositions(filtered);
+}
+
+function renderPositions(positions) {
+    const grid = document.getElementById('positionsGrid');
+    if (!positions.length) {
+        grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">未找到匹配的岗位</div>';
+        return;
+    }
+
+    grid.innerHTML = positions.map(p => `
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <span class="badge bg-primary mb-2">${p.category_name || '通用'}</span>
+                    <h6 class="card-title fw-bold">${p.name}</h6>
+                    ${p.education_required ? `<small class="text-muted">学历：${p.education_required}</small><br>` : ''}
+                    ${p.experience_years !== null ? `<small class="text-muted">经验：${p.experience_years}年+</small>` : ''}
+                    <p class="card-text small text-muted mt-2">${p.description || ''}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+loadLibrary();
+</script>
+{% endblock %}

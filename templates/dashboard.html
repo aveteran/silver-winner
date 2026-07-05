@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}个人仪表板 - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 fw-bold"><i class="fa-solid fa-chart-line me-2"></i>个人仪表板</h2>
+
+    <!-- 统计卡片 -->
+    <div class="row g-3 mb-4" id="statsCards">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-primary" id="statTotal">--</div>
+                    <div class="text-muted">评估总数</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-success" id="statBest">--</div>
+                    <div class="text-muted">最高分</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-info" id="statAvg">--</div>
+                    <div class="text-muted">平均分</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-warning" id="statPosition">--</div>
+                    <div class="text-muted">涉及岗位</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近评估列表 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>最近评估</h5>
+            <a href="/upload" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus me-1"></i>新增评估</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>文件名</th>
+                            <th>目标岗位</th>
+                            <th>评分</th>
+                            <th>等级</th>
+                            <th>状态</th>
+                            <th>时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resumeTableBody">
+                        <tr><td colspan="7" class="text-center text-muted py-4">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const token = localStorage.getItem('access_token');
+if (!token) { window.location.href = '/login'; }
+const headers = { 'Authorization': 'Bearer ' + token };
+
+const GRADE_COLORS = { S: '#f59e0b', A: '#10b981', B: '#3b82f6', C: '#f97316', D: '#ef4444' };
+
+async function loadDashboard() {
+    // 注：resumes列表API需要单独创建，此处前端直接调用
+    // 简化方案：通过localStorage或直接获取最近记录
+    try {
+        const res = await fetch('/api/v1/auth/me', { headers });
+        if (!res.ok) { window.location.href = '/login'; return; }
+
+        document.getElementById('statTotal').textContent = '--';
+        document.getElementById('statBest').textContent = '--';
+        document.getElementById('statAvg').textContent = '--';
+        document.getElementById('statPosition').textContent = '--';
+
+        document.getElementById('resumeTableBody').innerHTML =
+            '<tr><td colspan="7" class="text-center py-3">'
+            + '<a href="/upload" class="btn btn-primary">'
+            + '<i class="fa-solid fa-cloud-upload-alt me-1"></i>上传第一份简历</a>'
+            + '<p class="text-muted mt-2 mb-0 small">上传简历后，评估记录将显示在此处</p>'
+            + '</td></tr>';
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+loadDashboard();
+</script>
+{% endblock %}

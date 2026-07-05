@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fa-solid fa-file-lines me-2"></i>{{ app_name }}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="navItems">
+                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/positions">岗位库</a></li>
+                    <li class="nav-item" id="navUpload" style="display:none"><a class="nav-link" href="/upload"><i class="fa-solid fa-cloud-upload-alt"></i> 上传简历</a></li>
+                    <li class="nav-item" id="navDashboard" style="display:none"><a class="nav-link" href="/dashboard"><i class="fa-solid fa-chart-line"></i> 仪表板</a></li>
+                    <li class="nav-item" id="navLogin"><a class="nav-link" href="/login">登录</a></li>
+                    <li class="nav-item" id="navRegister"><a class="nav-link" href="/register">注册</a></li>
+                    <li class="nav-item" id="navLogout" style="display:none">
+                        <a class="nav-link" href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> 退出</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-light py-4 mt-5 border-top">
+        <div class="container text-center text-muted">
+            <small>© 2026 {{ app_name }} — Python + FastAPI | 简历智能评估 · 缺陷诊断 · 优化建议</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // 根据登录状态切换导航栏
+    function updateNav() {
+        const token = localStorage.getItem('access_token');
+        const isLoggedIn = !!token;
+        document.getElementById('navUpload').style.display = isLoggedIn ? '' : 'none';
+        document.getElementById('navDashboard').style.display = isLoggedIn ? '' : 'none';
+        document.getElementById('navLogin').style.display = isLoggedIn ? 'none' : '';
+        document.getElementById('navRegister').style.display = isLoggedIn ? 'none' : '';
+        document.getElementById('navLogout').style.display = isLoggedIn ? '' : 'none';
+    }
+    function logout() {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/';
+    }
+    updateNav();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

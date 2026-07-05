@@ -1,0 +1,101 @@
+/* ========== 全局样式 ========== */
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+/* ========== 评分等级颜色 ========== */
+.grade-S { color: #f59e0b; font-weight: bold; }  /* 金色 - 卓越 */
+.grade-A { color: #10b981; font-weight: bold; }  /* 绿色 - 优秀 */
+.grade-B { color: #3b82f6; font-weight: bold; }  /* 蓝色 - 良好 */
+.grade-C { color: #f97316; font-weight: bold; }  /* 橙色 - 一般 */
+.grade-D { color: #ef4444; font-weight: bold; }  /* 红色 - 需改进 */
+
+/* ========== 缺陷严重等级 ========== */
+.severity-HIGH {
+    border-left: 4px solid #ef4444;
+    background-color: #fef2f2;
+}
+.severity-MEDIUM {
+    border-left: 4px solid #f59e0b;
+    background-color: #fffbeb;
+}
+.severity-LOW {
+    border-left: 4px solid #3b82f6;
+    background-color: #eff6ff;
+}
+
+/* ========== 报告卡片 ========== */
+.report-score-card {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+.report-score-card .score-number {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* ========== 上传区域 ========== */
+.upload-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 1rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.upload-zone:hover,
+.upload-zone.drag-over {
+    border-color: var(--primary);
+    background-color: #eef2ff;
+}
+.upload-zone .upload-icon {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+/* ========== 雷达图容器 ========== */
+.chart-container {
+    width: 100%;
+    height: 400px;
+}
+
+/* ========== 优化建议折叠 ========== */
+.suggestion-card .original-text {
+    background-color: #fef2f2;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-style: italic;
+}
+.suggestion-card .improved-text {
+    background-color: #f0fdf4;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+/* ========== 加载动画 ========== */
+.spinner-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(255,255,255,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}

@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}评估报告 - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div id="loadingOverlay" class="spinner-overlay">
+        <div class="text-center"><div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem"></div><h5>加载报告中...</h5></div>
+    </div>
+
+    <!-- 顶部：总分卡片 + 等级 -->
+    <div class="row mb-4" id="scoreSection" style="display:none">
+        <div class="col-md-4">
+            <div class="report-score-card">
+                <div class="text-white-50 small mb-2">综合评分</div>
+                <div class="score-number" id="totalScore">--</div>
+                <div class="mt-2">
+                    <span class="fs-4 badge bg-light text-dark px-3 py-2" id="gradeBadge">--</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">能力维度雷达图</h5>
+                    <div class="chart-container" id="radarChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 维度得分柱状图 -->
+    <div class="row mb-4" id="barSection" style="display:none">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">各维度得分对比</h5>
+                    <div class="chart-container" id="barChart" style="height:300px"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 缺陷清单 -->
+    <div class="row mb-4" id="defectsSection" style="display:none">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fa-solid fa-magnifying-glass text-danger me-2"></i>简历缺陷清单</h5>
+                    <span class="badge bg-danger" id="defectCount">0个问题</span>
+                </div>
+                <div class="card-body" id="defectsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 优化建议 -->
+    <div class="row mb-4" id="optimizationsSection" style="display:none">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fa-solid fa-wand-magic-sparkles text-success me-2"></i>优化建议</h5>
+                </div>
+                <div class="card-body" id="optimizationsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center mb-5" id="actionSection" style="display:none">
+        <a href="/upload" class="btn btn-outline-primary btn-lg me-2">
+            <i class="fa-solid fa-cloud-upload-alt me-1"></i>上传新简历
+        </a>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-lg">
+            <i class="fa-solid fa-chart-line me-1"></i>返回仪表板
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const token = localStorage.getItem('access_token');
+if (!token) { window.location.href = '/login'; }
+const headers = { 'Authorization': 'Bearer ' + token };
+
+const resumeId = window.location.pathname.split('/').pop();
+
+// 颜色定义
+const GRADE_COLORS = { S: '#f59e0b', A: '#10b981', B: '#3b82f6', C: '#f97316', D: '#ef4444' };
+const SEVERITY_ICONS = { HIGH: '🔴', MEDIUM: '🟡', LOW: '🔵' };
+const SEVERITY_CLASS = { HIGH: 'severity-HIGH', MEDIUM: 'severity-MEDIUM', LOW: 'severity-LOW' };
+
+async function loadReport() {
+    try {
+        const res = await fetch(`/api/v1/resumes/${resumeId}/report`, { headers });
+        if (!res.ok) { alert('加载失败'); window.location.href = '/upload'; return; }
+        const report = await res.json();
+
+        document.getElementById('loadingOverlay').style.display = 'none';
+
+        if (report.status !== 'completed') {
+            alert('报告尚未处理完成'); return;
+        }
+
+        // 评分
+        renderScore(report.scoring);
+        // 图表
+        renderRadarChart(report.scoring);
+        renderBarChart(report.scoring);
+        // 缺陷
+        renderDefects(report.defects, report.defect_summary);
+        // 优化建议
+        renderOptimizations(report.optimizations);
+
+        document.getElementById('scoreSection').style.display = '';
+        document.getElementById('barSection').style.display = '';
+        document.getElementById('defectsSection').style.display = '';
+        document.getElementById('optimizationsSection').style.display = '';
+        document.getElementById('actionSection').style.display = '';
+    } catch(e) {
+        console.error(e);
+        alert('加载报告失败: ' + e.message);
+    }
+}
+
+function renderScore(scoring) {
+    document.getElementById('totalScore').textContent = scoring.total_score;
+    const badge = document.getElementById('gradeBadge');
+    badge.textContent = scoring.grade + '级 · ' + scoring.grade_description;
+    badge.style.backgroundColor = GRADE_COLORS[scoring.grade] || '#6b7280';
+    badge.style.color = 'white';
+}
+
+function renderRadarChart(scoring) {
+    const chart = echarts.init(document.getElementById('radarChart'));
+    const labels = Object.values(scoring.dimension_labels);
+    const data = Object.values(scoring.dimension_scores);
+
+    chart.setOption({
+        tooltip: {},
+        legend: { data: [scoring.position_name || '评分'], bottom: 0 },
+        radar: {
+            indicator: labels.map(l => ({ name: l, max: 100 })),
+            center: ['50%', '55%'],
+            radius: '70%'
+        },
+        series: [{
+            type: 'radar',
+            name: scoring.position_name || '评分',
+            data: [{ value: data, name: '各维度得分' }],
+            areaStyle: { opacity: 0.2 },
+            itemStyle: { color: '#4f46e5' },
+            lineStyle: { color: '#4f46e5', width: 2 }
+        }]
+    });
+
+    window.addEventListener('resize', () => chart.resize());
+}
+
+function renderBarChart(scoring) {
+    const chart = echarts.init(document.getElementById('barChart'));
+    const labels = Object.values(scoring.dimension_labels);
+    const data = Object.values(scoring.dimension_scores);
+
+    chart.setOption({
+        tooltip: { trigger: 'axis' },
+        xAxis: {
+            type: 'category',
+            data: labels,
+            axisLabel: { fontSize: 11 }
+        },
+        yAxis: { type: 'value', max: 100, name: '得分' },
+        series: [{
+            type: 'bar',
+            data: data.map((v, i) => ({
+                value: v,
+                itemStyle: {
+                    color: v >= 80 ? '#10b981' : v >= 60 ? '#3b82f6' : v >= 40 ? '#f59e0b' : '#ef4444'
+                }
+            })),
+            label: { show: true, position: 'top', formatter: '{c}' },
+            barWidth: '50%'
+        }],
+        grid: { top: 10, right: 20, bottom: 30, left: 50 }
+    });
+
+    window.addEventListener('resize', () => chart.resize());
+}
+
+function renderDefects(defects, summary) {
+    document.getElementById('defectCount').textContent =
+        summary.total + '个问题（高' + summary.high + ' / 中' + summary.medium + ' / 低' + summary.low + '）';
+
+    const container = document.getElementById('defectsList');
+    if (!defects.length) {
+        container.innerHTML = '<div class="text-center text-success py-3"><i class="fa-solid fa-check-circle fa-2x mb-2"></i><p>未检测到明显缺陷</p></div>';
+        return;
+    }
+
+    container.innerHTML = defects.map(d => `
+        <div class="defect-item p-3 mb-2 rounded ${SEVERITY_CLASS[d.severity] || ''}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="fw-bold">${SEVERITY_ICONS[d.severity] || ''} [${d.severity}] ${d.category}</span>
+                    <span class="text-muted ms-2 small">${d.rule_id}</span>
+                </div>
+                <span class="text-muted small">${d.location || ''}</span>
+            </div>
+            <p class="mt-2 mb-0">${d.description}</p>
+        </div>
+    `).join('');
+}
+
+function renderOptimizations(items) {
+    const container = document.getElementById('optimizationsList');
+    if (!items.length) {
+        container.innerHTML = '<div class="text-center text-muted py-3"><p>暂无优化建议</p></div>';
+        return;
+    }
+
+    container.innerHTML = items.map((o, idx) => `
+        <div class="suggestion-card card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white border-0" data-bs-toggle="collapse" data-bs-target="#opt${idx}" style="cursor:pointer">
+                <span class="fw-bold">${o.title}</span>
+                <span class="badge bg-secondary ms-2">${o.category}</span>
+                <i class="fa-solid fa-chevron-down float-end mt-1"></i>
+            </div>
+            <div id="opt${idx}" class="collapse show">
+                <div class="card-body">
+                    <p class="pre-line">${o.content.replace(/\n/g, '<br>')}</p>
+                    ${o.original_text ? `
+                    <div class="original-text mt-2">
+                        <strong>📝 原文：</strong><br>${o.original_text}
+                    </div>` : ''}
+                    ${o.improved_example ? `
+                    <div class="improved-text mt-2">
+                        <strong>✨ 改进示例：</strong><br>${o.improved_example.replace(/\n/g, '<br>')}
+                    </div>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+loadReport();
+</script>
+{% endblock %}

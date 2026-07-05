@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}首页 - {{ app_name }}{% endblock %}
+
+{% block content %}
+<!-- Hero区域 -->
+<section class="bg-primary text-white py-5">
+    <div class="container text-center py-5">
+        <h1 class="display-4 fw-bold mb-3">{{ app_name }}</h1>
+        <p class="lead mb-4">多行业 · 多岗位 · 全自动简历智能评测与优化</p>
+        <p class="mb-4">上传简历，一键获取精准评分 · 缺陷诊断 · 优化建议</p>
+        <a href="/upload" class="btn btn-light btn-lg px-5 fw-bold">
+            <i class="fa-solid fa-cloud-upload-alt me-2"></i>开始评估
+        </a>
+    </div>
+</section>
+
+<!-- 功能特性 -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 fw-bold">核心功能</h2>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="display-4 text-primary mb-3"><i class="fa-solid fa-chart-pie"></i></div>
+                        <h5 class="card-title">智能评分</h5>
+                        <p class="card-text text-muted">六维度加权评分引擎<br>40+岗位自动适配</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="display-4 text-danger mb-3"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <h5 class="card-title">缺陷诊断</h5>
+                        <p class="card-text text-muted">规则引擎全扫描<br>精准定位简历不足</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="display-4 text-success mb-3"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <h5 class="card-title">优化建议</h5>
+                        <p class="card-text text-muted">自动生成修改方案<br>可直接复制替换</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="display-4 text-warning mb-3"><i class="fa-solid fa-file-pdf"></i></div>
+                        <h5 class="card-title">报告导出</h5>
+                        <p class="card-text text-muted">可视化雷达图报告<br>一键导出PDF</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 支持岗位 -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-4 fw-bold">支持岗位覆盖</h2>
+        <div class="row g-3">
+            <div class="col-md">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="text-primary"><i class="fa-solid fa-code me-2"></i>IT技术类</h5>
+                        <p class="text-muted small mb-0">Python开发 · Java后端 · 前端 · 数据分析 · 算法 · 测试 · 运维 · 产品经理 · UI设计 · 网络安全</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="text-success"><i class="fa-solid fa-chart-line me-2"></i>商务管理类</h5>
+                        <p class="text-muted small mb-0">市场营销 · 人力资源 · 财务会计 · 项目管理 · 销售 · 品牌策划 · 行政管理 · 供应链</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="text-warning"><i class="fa-solid fa-gears me-2"></i>工程技术类</h5>
+                        <p class="text-muted small mb-0">机械 · 电气 · 土木 · 建筑 · 环境 · 化工 · 质量工程师</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="text-danger"><i class="fa-solid fa-heart-pulse me-2"></i>教育医疗类</h5>
+                        <p class="text-muted small mb-0">教师 · 讲师 · 培训师 · 临床医生 · 护理 · 药剂师 · 医学检验</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="text-info"><i class="fa-solid fa-briefcase me-2"></i>综合通用类</h5>
+                        <p class="text-muted small mb-0">行政文员 · 客服 · 新媒体运营 · 内容编辑 · 翻译 · 法律 · 物业 · 物流</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-5 text-center">
+    <div class="container">
+        <h2 class="fw-bold mb-3">准备好优化您的简历了吗？</h2>
+        <p class="lead text-muted mb-4">支持 PDF / Word 格式，3秒解析，即刻出报告</p>
+        <a href="/upload" class="btn btn-primary btn-lg px-5">
+            <i class="fa-solid fa-cloud-upload-alt me-2"></i>立即上传评估
+        </a>
+    </div>
+</section>
+{% endblock %}

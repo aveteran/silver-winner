@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}注册 - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h3 class="text-center mb-4 fw-bold">用户注册</h3>
+                    <div id="alertBox" class="alert d-none"></div>
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label class="form-label">用户名</label>
+                            <input type="text" name="username" class="form-control" placeholder="2-30个字符" required minlength="2" maxlength="30">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" name="email" class="form-control" placeholder="请输入邮箱" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">密码</label>
+                            <input type="password" name="password" class="form-control" placeholder="至少6位密码" required minlength="6">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2">注 册</button>
+                    </form>
+                    <p class="text-center mt-3 mb-0">
+                        已有账号？<a href="/login">立即登录</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const alertBox = document.getElementById('alertBox');
+
+    if (form.password.value.length < 6) {
+        alertBox.className = 'alert alert-warning';
+        alertBox.textContent = '密码长度至少6位';
+        alertBox.classList.remove('d-none');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/v1/auth/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                username: form.username.value.trim(),
+                email: form.email.value.trim(),
+                password: form.password.value
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            alertBox.className = 'alert alert-success';
+            alertBox.textContent = '注册成功！即将跳转登录页...';
+            alertBox.classList.remove('d-none');
+            setTimeout(() => { window.location.href = '/login'; }, 1500);
+        } else {
+            alertBox.className = 'alert alert-danger';
+            alertBox.textContent = data.detail || '注册失败';
+            alertBox.classList.remove('d-none');
+        }
+    } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = '网络错误，请重试';
+        alertBox.classList.remove('d-none');
+    }
+});
+</script>
+{% endblock %}
